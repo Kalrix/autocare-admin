@@ -120,8 +120,9 @@ export default function BookingViewPage() {
 
       // Calculate new price if vehicle or package changed
       if (formData.vehicle_type && formData.package) {
-        updateData.price = packagePrices[formData.vehicle_type][formData.package] + 
-                         (formData.express ? 199 : 0);
+       updateData.price = packagePrices[formData.vehicle_type as keyof typeof packagePrices][formData.package as keyof typeof packagePrices[Hatchback]] + 
+                   (formData.express ? 199 : 0);
+
       }
 
       const { data, error } = await supabase
