@@ -90,8 +90,11 @@ export default function CreateBookingPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
+  const target = e.target as HTMLInputElement | HTMLSelectElement;
+  const { name, value, type } = target;
+  const checked = (target as HTMLInputElement).checked;
+
+  setForm((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
