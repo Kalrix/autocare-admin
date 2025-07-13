@@ -41,25 +41,27 @@ interface Vehicle {
 export default function EditCustomerPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const customerId = searchParams.get("id");
+  const [customerId, setCustomerId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [customer, setCustomer] = useState<Partial<Customer>>({});
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
 
   useEffect(() => {
-    if (!customerId) return;
+    const id = searchParams.get("id");
+    setCustomerId(id);
+    if (!id) return;
 
     const fetchCustomer = async () => {
-      const { data: cust } = await supabase.from("customers").select("*").eq("id", customerId).single();
-      const { data: vehs } = await supabase.from("customer_vehicles").select("*").eq("customer_id", customerId);
+      const { data: cust } = await supabase.from("customers").select("*").eq("id", id).single();
+      const { data: vehs } = await supabase.from("customer_vehicles").select("*").eq("customer_id", id);
       if (cust) setCustomer(cust);
       if (vehs) setVehicles(vehs);
       setLoading(false);
     };
 
     fetchCustomer();
-  }, [customerId]);
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
