@@ -12,8 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "react-hot-toast";
 import { ArrowLeft } from "lucide-react";
 
-// ✅ Add missing Vehicle type
-type Vehicle = {
+interface Vehicle {
   vehicle_type: string;
   vehicle_subtype: string;
   vehicle_name: string;
@@ -21,7 +20,7 @@ type Vehicle = {
   last_service_date: string;
   basic_issues: string;
   vehicle_number: string;
-};
+}
 
 const vehicleSubcategories: Record<string, string[]> = {
   Car: ["Hatchback", "Sedan", "SUV", "Compact SUV"],
@@ -62,7 +61,7 @@ export default function CreateCustomerPage() {
     },
   ]);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -75,10 +74,10 @@ export default function CreateCustomerPage() {
     if (exists) toast.error("Customer already exists.");
   };
 
-  const handleVehicleChange = (index: number, name: string, value: string) => {
+  const handleVehicleChange = (index: number, name: keyof Vehicle, value: string) => {
     const updated = [...vehicles];
-    updated[index][name as keyof Vehicle] = value;
-    if (name === "vehicle_type") updated[index]["vehicle_subtype"] = "";
+    updated[index][name] = value;
+    if (name === "vehicle_type") updated[index].vehicle_subtype = "";
     setVehicles(updated);
   };
 
@@ -308,17 +307,10 @@ export default function CreateCustomerPage() {
 
             <TabsContent value="step-2">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { label: "Street", name: "address_street" },
-                  { label: "City", name: "address_city" },
-                  { label: "State", name: "address_state" },
-                  { label: "Pincode", name: "address_pincode" },
-                  { label: "Latitude", name: "address_lat" },
-                  { label: "Longitude", name: "address_lng" },
-                ].map(({ label, name }) => (
-                  <div key={name} className="flex flex-col">
-                    <Label className="mb-1">{label}</Label>
-                    <Input name={name} placeholder={label} onChange={handleChange} value={form[name as keyof typeof form]} />
+                {["address_street", "address_city", "address_state", "address_pincode", "address_lat", "address_lng"].map((field) => (
+                  <div key={field} className="flex flex-col">
+                    <Label className="mb-1">{field.replace("address_", "").replace("_", " ")}</Label>
+                    <Input name={field} placeholder={field} onChange={handleChange} value={form[field as keyof typeof form]} />
                   </div>
                 ))}
               </div>

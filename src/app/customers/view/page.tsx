@@ -61,14 +61,18 @@ export default function EditCustomerPage() {
     fetchCustomer();
   }, [customerId]);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setCustomer((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleVehicleChange = (index: number, name: string, value: string) => {
+  const handleVehicleChange = (index: number, name: keyof Vehicle, value: string) => {
     const updated = [...vehicles];
-    updated[index][name] = value;
+    if (name === "odo_reading") {
+      updated[index][name] = parseInt(value) || 0;
+    } else {
+      updated[index][name] = value as never;
+    }
     setVehicles(updated);
   };
 
@@ -133,8 +137,12 @@ export default function EditCustomerPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {["name", "phone", "whatsapp", "address_street", "address_city", "address_state", "address_pincode", "address_lat", "address_lng", "opening_balance"].map((field) => (
                 <div className="flex flex-col" key={field}>
-                  <Label className="capitalize">{field.replace("_", " ")}</Label>
-                  <Input name={field} value={customer[field as keyof Customer] || ""} onChange={handleChange} />
+                  <Label className="capitalize">{field.replace(/_/g, " ")}</Label>
+                  <Input
+                    name={field}
+                    value={(customer[field as keyof Customer] ?? "") as string | number}
+                    onChange={handleChange}
+                  />
                 </div>
               ))}
               <div className="flex flex-col">
@@ -155,23 +163,27 @@ export default function EditCustomerPage() {
           <TabsContent value="vehicles">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-lg font-semibold">Vehicles ({vehicles.length})</h2>
-              <Button variant="outline" size="sm" onClick={addVehicle}>+ Add Vehicle</Button>
+              <Button variant="outline" size="sm" onClick={addVehicle}>
+                + Add Vehicle
+              </Button>
             </div>
             <div className="space-y-4">
               {vehicles.map((v, i) => (
                 <div key={v.id || i} className="bg-white border rounded p-4">
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-medium">Vehicle {i + 1}</h3>
-                    <Button variant="ghost" size="sm" onClick={() => removeVehicle(i)}>Remove</Button>
+                    <Button variant="ghost" size="sm" onClick={() => removeVehicle(i)}>
+                      Remove
+                    </Button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {["vehicle_number", "vehicle_type", "vehicle_subtype", "vehicle_name", "odo_reading", "last_service_date"].map((field) => (
                       <div className="flex flex-col" key={field}>
-                        <Label className="capitalize">{field.replace("_", " ")}</Label>
+                        <Label className="capitalize">{field.replace(/_/g, " ")}</Label>
                         <Input
                           name={field}
-                          value={v[field as keyof Vehicle] || ""}
-                          onChange={(e) => handleVehicleChange(i, field, e.target.value)}
+                          value={(v[field as keyof Vehicle] ?? "") as string | number}
+                          onChange={(e) => handleVehicleChange(i, field as keyof Vehicle, e.target.value)}
                         />
                       </div>
                     ))}
