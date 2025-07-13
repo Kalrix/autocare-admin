@@ -119,11 +119,20 @@ export default function BookingViewPage() {
       }
 
       // Calculate new price if vehicle or package changed
-      if (formData.vehicle_type && formData.package) {
-       updateData.price = packagePrices[formData.vehicle_type as keyof typeof packagePrices][formData.package as keyof typeof packagePrices[Hatchback]] + 
-                   (formData.express ? 199 : 0);
+      const vehicle = formData.vehicle_type;
+const pkg = formData.package;
 
-      }
+if (
+  vehicle &&
+  pkg &&
+  packagePrices.hasOwnProperty(vehicle) &&
+  packagePrices[vehicle as keyof typeof packagePrices].hasOwnProperty(pkg)
+) {
+  const v = vehicle as keyof typeof packagePrices;
+  const p = pkg as keyof typeof packagePrices[typeof v];
+  updateData.price = packagePrices[v][p] + (formData.express ? 199 : 0);
+}
+
 
       const { data, error } = await supabase
         .from("carwash")
