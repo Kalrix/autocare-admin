@@ -133,7 +133,7 @@ export default function CarwashBookingPage() {
               onClick={() => setActiveTab(status as BookingStatus | "all")}
             >
               {status.charAt(0).toUpperCase() + status.slice(1)}
-              <span className="ml-1 text-xs font-semibold">({counts[status]})</span>
+              <span className="ml-1 text-xs font-semibold">({counts[status as keyof StatusWithCount]})</span>
             </Button>
           ))}
         </div>
