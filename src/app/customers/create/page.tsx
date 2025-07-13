@@ -48,6 +48,7 @@ export default function CreateCustomerPage() {
       last_service_date: "",
       basic_issues: "",
       vehicle_number: "",
+      [key: string]: string;
       
     },
   ]);
