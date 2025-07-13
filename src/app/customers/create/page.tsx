@@ -12,6 +12,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "react-hot-toast";
 import { ArrowLeft } from "lucide-react";
 
+// ✅ Add missing Vehicle type
+type Vehicle = {
+  vehicle_type: string;
+  vehicle_subtype: string;
+  vehicle_name: string;
+  odo_reading: string;
+  last_service_date: string;
+  basic_issues: string;
+  vehicle_number: string;
+};
+
 const vehicleSubcategories: Record<string, string[]> = {
   Car: ["Hatchback", "Sedan", "SUV", "Compact SUV"],
   Auto: ["Passenger Auto", "Goods Auto"],
@@ -48,8 +59,6 @@ export default function CreateCustomerPage() {
       last_service_date: "",
       basic_issues: "",
       vehicle_number: "",
-      [key: string]: string;
-      
     },
   ]);
 
@@ -68,7 +77,7 @@ export default function CreateCustomerPage() {
 
   const handleVehicleChange = (index: number, name: string, value: string) => {
     const updated = [...vehicles];
-    updated[index][name] = value;
+    updated[index][name as keyof Vehicle] = value;
     if (name === "vehicle_type") updated[index]["vehicle_subtype"] = "";
     setVehicles(updated);
   };
