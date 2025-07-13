@@ -7,7 +7,11 @@ import Sidebar from "@/components/ui/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const packagePrices = {
+// ✅ Type-safe package pricing
+type VehicleType = "Hatchback" | "Compact SUV" | "SUV";
+type PackageType = "Basic" | "Premium" | "Plus";
+
+const packagePrices: Record<VehicleType, Record<PackageType, number>> = {
   Hatchback: { Basic: 200, Premium: 300, Plus: 400 },
   "Compact SUV": { Basic: 220, Premium: 350, Plus: 600 },
   SUV: { Basic: 250, Premium: 400, Plus: 800 },
@@ -33,9 +37,13 @@ export default function CreateBookingPage() {
     store_id: "",
   });
 
-  const price = form.vehicle_type && form.package
-    ? packagePrices[form.vehicle_type]?.[form.package] + (form.express ? 199 : 0)
-    : 0;
+  // ✅ Type-safe price calculation
+  const basePrice =
+    (form.vehicle_type &&
+      form.package &&
+      packagePrices[form.vehicle_type as VehicleType]?.[form.package as PackageType]) || 0;
+
+  const totalPrice = basePrice + (form.express ? 199 : 0);
 
   useEffect(() => {
     supabase
@@ -49,26 +57,23 @@ export default function CreateBookingPage() {
 
   useEffect(() => {
     if (form.date) {
-      const today = new Date().toISOString().split('T')[0];
-      const selectedDate = new Date(form.date);
+      const today = new Date().toISOString().split("T")[0];
       const currentTime = new Date();
-      
+
       if (form.date === today) {
-        // Filter time slots for today
-        const filteredSlots = timeSlots.filter(slot => {
+        const filteredSlots = timeSlots.filter((slot) => {
           const [hours, minutes] = convertTimeTo24Hour(slot);
           const slotTime = new Date();
           slotTime.setHours(hours, minutes, 0, 0);
           return slotTime > currentTime;
         });
+
         setAvailableTimeSlots(filteredSlots);
-        
-        // Reset time if current selection is no longer available
+
         if (form.time && !filteredSlots.includes(form.time)) {
-          setForm(prev => ({ ...prev, time: "" }));
+          setForm((prev) => ({ ...prev, time: "" }));
         }
       } else {
-        // For future dates, all slots are available
         setAvailableTimeSlots(timeSlots);
       }
     } else {
@@ -77,45 +82,54 @@ export default function CreateBookingPage() {
   }, [form.date, form.time]);
 
   const convertTimeTo24Hour = (timeString: string) => {
-    const [time, modifier] = timeString.split(' ');
-    let [hours, minutes] = time.split(':').map(Number);
-    if (modifier === 'PM' && hours < 12) hours += 12;
-    if (modifier === 'AM' && hours === 12) hours = 0;
+    const [time, modifier] = timeString.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
+    if (modifier === "PM" && hours < 12) hours += 12;
+    if (modifier === "AM" && hours === 12) hours = 0;
     return [hours, minutes];
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type, checked } = e.target;
-    setForm(prev => ({
+    setForm((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleSubmit = async () => {
-    // Validate time slot if booking is for today
-    if (form.date === new Date().toISOString().split('T')[0] && form.time) {
+    if (
+      !form.name ||
+      !form.phone ||
+      !form.vehicle_type ||
+      !form.package ||
+      !form.date ||
+      !form.time ||
+      !form.store_id
+    ) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    if (form.date === new Date().toISOString().split("T")[0] && form.time) {
       const [hours, minutes] = convertTimeTo24Hour(form.time);
       const slotTime = new Date();
       slotTime.setHours(hours, minutes, 0, 0);
-      
+
       if (slotTime < new Date()) {
         alert("Cannot book for a time slot that has already passed");
         return;
       }
     }
 
-    if (!form.name || !form.phone || !form.vehicle_type || !form.package || !form.date || !form.time || !form.store_id) {
-      alert("Please fill all required fields");
-      return;
-    }
-
-    const { error } = await supabase.from("carwash").insert([{
-      ...form,
-      price,
-      status: "pending",
-      lead_source: "Website",
-    }]);
+    const { error } = await supabase.from("carwash").insert([
+      {
+        ...form,
+        price: totalPrice,
+        status: "pending",
+        lead_source: "Website",
+      },
+    ]);
 
     if (!error) {
       router.push("/crm/bookings/carwashBook");
@@ -129,11 +143,11 @@ export default function CreateBookingPage() {
       <div className="hidden md:block">
         <Sidebar />
       </div>
-      
+
       <div className="flex-1 p-4 md:p-6 w-full">
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h1 className="text-xl md:text-2xl font-bold">New Car Wash Booking</h1>
-          <button 
+          <button
             onClick={() => router.back()}
             className="text-sm md:text-base text-gray-500 hover:text-gray-700 flex items-center"
           >
@@ -150,7 +164,6 @@ export default function CreateBookingPage() {
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  className="w-full text-sm md:text-base"
                   placeholder="John Doe"
                 />
               </div>
@@ -161,7 +174,6 @@ export default function CreateBookingPage() {
                   name="phone"
                   value={form.phone}
                   onChange={handleChange}
-                  className="w-full text-sm md:text-base"
                   placeholder="+91 9876543210"
                 />
               </div>
@@ -172,7 +184,7 @@ export default function CreateBookingPage() {
                   name="vehicle_type"
                   value={form.vehicle_type}
                   onChange={handleChange}
-                  className="w-full p-2 text-sm md:text-base border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                  className="w-full p-2 border border-gray-300 rounded-md"
                 >
                   <option value="">Select vehicle</option>
                   <option value="Hatchback">Hatchback</option>
@@ -187,7 +199,7 @@ export default function CreateBookingPage() {
                   name="package"
                   value={form.package}
                   onChange={handleChange}
-                  className="w-full p-2 text-sm md:text-base border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                  className="w-full p-2 border border-gray-300 rounded-md"
                 >
                   <option value="">Select package</option>
                   <option value="Basic">Basic</option>
@@ -202,9 +214,8 @@ export default function CreateBookingPage() {
                   type="date"
                   name="date"
                   value={form.date}
-                  min={new Date().toISOString().split('T')[0]}
+                  min={new Date().toISOString().split("T")[0]}
                   onChange={handleChange}
-                  className="w-full text-sm md:text-base"
                 />
               </div>
 
@@ -215,16 +226,23 @@ export default function CreateBookingPage() {
                   value={form.time}
                   onChange={handleChange}
                   disabled={!form.date || availableTimeSlots.length === 0}
-                  className="w-full p-2 text-sm md:text-base border border-gray-300 rounded-md focus:ring-black focus:border-black disabled:opacity-50"
+                  className="w-full p-2 border border-gray-300 rounded-md disabled:opacity-50"
                 >
-                  <option value="">{form.date ? "Select time" : "Select date first"}</option>
-                  {availableTimeSlots.map(slot => (
-                    <option key={slot} value={slot}>{slot}</option>
+                  <option value="">
+                    {form.date ? "Select time" : "Select date first"}
+                  </option>
+                  {availableTimeSlots.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
                   ))}
                 </select>
-                {form.date === new Date().toISOString().split('T')[0] && availableTimeSlots.length === 0 && (
-                  <p className="text-xs text-red-500 mt-1">No available slots left for today</p>
-                )}
+                {form.date === new Date().toISOString().split("T")[0] &&
+                  availableTimeSlots.length === 0 && (
+                    <p className="text-xs text-red-500 mt-1">
+                      No available slots left for today
+                    </p>
+                  )}
               </div>
 
               <div className="space-y-1 md:col-span-2">
@@ -233,11 +251,13 @@ export default function CreateBookingPage() {
                   name="store_id"
                   value={form.store_id}
                   onChange={handleChange}
-                  className="w-full p-2 text-sm md:text-base border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                  className="w-full p-2 border border-gray-300 rounded-md"
                 >
                   <option value="">Select a hub location</option>
-                  {stores.map(store => (
-                    <option key={store.id} value={store.id}>{store.name}</option>
+                  {stores.map((store) => (
+                    <option key={store.id} value={store.id}>
+                      {store.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -250,7 +270,7 @@ export default function CreateBookingPage() {
                   onChange={handleChange}
                   className="h-4 w-4 text-black focus:ring-black"
                 />
-                <span className="text-sm md:text-base font-medium">Express Service (+₹199)</span>
+                <span className="text-sm font-medium">Express Service (+₹199)</span>
               </div>
             </div>
           </div>
@@ -259,12 +279,16 @@ export default function CreateBookingPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <p className="text-sm text-gray-600">Total Amount</p>
-                <p className="text-lg md:text-xl font-bold">₹{price}</p>
+                <p className="text-lg md:text-xl font-bold">₹{totalPrice}</p>
               </div>
               <Button
                 onClick={handleSubmit}
-                disabled={!form.time || (form.date === new Date().toISOString().split('T')[0] && availableTimeSlots.length === 0)}
-                className="w-full md:w-auto bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 transition text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={
+                  !form.time ||
+                  (form.date === new Date().toISOString().split("T")[0] &&
+                    availableTimeSlots.length === 0)
+                }
+                className="w-full md:w-auto bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 transition disabled:opacity-50"
               >
                 Confirm Booking
               </Button>
