@@ -98,17 +98,18 @@ export default function BookingViewPage() {
       setLoading(true);
       
       // Prepare update data with only changed fields
-      const updateData = {
-        name: formData.name,
-        phone: formData.phone,
-        vehicle_type: formData.vehicle_type,
-        package: formData.package,
-        express: formData.express,
-        date: formData.date,
-        time: formData.time,
-        store_id: formData.store_id,
-        status: formData.status,
-      };
+      const updateData: Partial<Booking> = {
+  name: formData.name,
+  phone: formData.phone,
+  vehicle_type: formData.vehicle_type,
+  package: formData.package,
+  express: formData.express,
+  date: formData.date,
+  time: formData.time,
+  store_id: formData.store_id,
+  status: formData.status,
+};
+
 
       // Validate required fields
       if (!updateData.name || !updateData.phone || !updateData.vehicle_type || 
