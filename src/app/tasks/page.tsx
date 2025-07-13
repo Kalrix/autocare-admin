@@ -21,7 +21,7 @@ export default function TaskTypesPage() {
     name: "",
     allowed_in_hub: false,
     allowed_in_garage: false,
-    slot_type: "per_hour" as const,
+    slot_type: "per_hour" as "per_hour" | "max_per_day",
     count: 0,
   });
 
