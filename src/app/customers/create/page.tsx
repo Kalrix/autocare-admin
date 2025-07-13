@@ -39,7 +39,7 @@ export default function CreateCustomerPage() {
     balance_type: "Cr",
   });
 
-  const [vehicles, setVehicles] = useState([
+  const [vehicles, setVehicles] = useState<Vehicle[]>([
     {
       vehicle_type: "",
       vehicle_subtype: "",
@@ -48,6 +48,7 @@ export default function CreateCustomerPage() {
       last_service_date: "",
       basic_issues: "",
       vehicle_number: "",
+      
     },
   ]);
 
